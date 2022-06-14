@@ -9,8 +9,8 @@
 
 //エラーを報告するための関数
 void error_at(char *loc, char *fmt, ...); //エラー箇所を報告する
-bool consume(char op); //次のトークンが期待している記号ときには、トークンを一つ読み進めて真を返す。
-void expect(char op); //次のトークンが期待している記号のときには、トークンを１つ読み進めて真を返す。
+bool consume(char *op); //次のトークンが期待している記号ときには、トークンを一つ読み進めて真を返す。
+void expect(char *op); //次のトークンが期待している記号のときには、トークンを１つ読み進めて真を返す。
 int expect_number(); //次のトークンが数値の場合、トークンを１つ読み進めてその数値を返す。
 bool at_eof();
 
@@ -31,9 +31,11 @@ struct Token{
   Token *next;    //次の入力トークン
   int val;        //kindがTK_NUMの場合、その数値
   char *str;      //トークン文字列
+  int len;        //トークンの長さ
 };
-Token *new_token(TokenKind kind, Token *cur, char *str); //新しいトークンを作成してcurにつなげる
+Token *new_token(TokenKind kind, Token *cur, char *str, int len); //新しいトークンを作成してcurにつなげる
 Token *tokenize(char *p); //入力文字列pをトークナイズしてそれを返す
+bool startswith(char *p, char *q); //第2引数の文字数分、2つの引数を比較し同じなら1異なる文字列なら0を返す
 
 
 //構文木
@@ -44,6 +46,10 @@ typedef enum{
 	     ND_SUB, // -
 	     ND_MUL, // *
 	     ND_DIV, // /
+	     ND_EQ,  // ==
+	     ND_NE,  // !=
+	     ND_LT,  // <, >
+	     ND_LE,  // <= , >=
 	     ND_NUM, // 整数
 } NodeKind;
 
@@ -61,10 +67,13 @@ Node *new_node(NodeKind kind, Node *lhs, Node* rhs); //新しいノードを作�
 Node *new_node_num(int val);
 
 //パーサ
-Node *expr();
-Node *mul();
-Node *unary();
-Node *primary();
+Node *expr();       //expr = equality
+Node *equality();   //equality = relational("==" relational | "!=" relational)*
+Node *relational(); //relational = add("<" add | "<=" add | ">" add | ">= " add)*
+Node *add();        //add = mul("+" mul | "-" mul)*
+Node *mul();        //mul = unary("*" unary | "/" unary)*
+Node *unary();      //unary = ("+" | "-")?primary
+Node *primary();    //primary = num | "(" expr ")"
 
 //抽象木構文をスタックマシンに変換
 void gen(Node *node);
