@@ -63,6 +63,7 @@ Node *new_node_num(int val);
 //パーサ
 Node *expr();
 Node *mul();
+Node *unary();
 Node *primary();
 
 //抽象木構文をスタックマシンに変換
